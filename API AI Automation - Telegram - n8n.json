@@ -1,0 +1,189 @@
+{
+  "name": "API AI Automation - Telegram - n8n",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "172a6056-495e-4687-a8c6-51a5e1a3d7d2",
+      "name": "Telegram Trigger",
+      "webhookId": "02964f93-54ee-48a5-beb5-dbff3a58ca22",
+      "credentials": {
+        "telegramApi": {
+          "id": "TpNnRZkgE48FzKE1",
+          "name": "Telegram_LearnAI_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1yCMFjpPNYvgCJ8RuXECfBC3LCrd1QA2JR82XcI6x6qA",
+          "mode": "list",
+          "cachedResultName": "student_enrollment_raw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yCMFjpPNYvgCJ8RuXECfBC3LCrd1QA2JR82XcI6x6qA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yCMFjpPNYvgCJ8RuXECfBC3LCrd1QA2JR82XcI6x6qA/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "63b805a5-4e4f-47b9-8da1-8236ed1db1d3",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "o4i0N2SOtVU8u0T0",
+          "name": "Google API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=create a customized msg for the student who enrolled in the program\n\nname :  {{ $json.Name }}\n\ngive me the output in the JSON format only , templates below\n\nmessgae : <Actual message>"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "0cfd3ec7-efe5-4b93-9989-abbcbcf33af8",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Bmrji1uGueNpmDPo",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        0
+      ],
+      "id": "00cdcbee-a7f1-4f8a-bc3c-84dd2fe86ed9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output[0].content[0].text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "25eef9d6-6697-4a28-b195-b8ea34a3110e",
+      "name": "Send a text message",
+      "webhookId": "86c2ccf0-bb6d-4883-ba6d-5f6c35f4f4d5",
+      "credentials": {
+        "telegramApi": {
+          "id": "TpNnRZkgE48FzKE1",
+          "name": "Telegram_LearnAI_bot"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0372c3b1-5b2a-41f4-bc3f-9c2255baeb95",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e6100e540e4f6a31f3e60af3c69369c8d0655c692ad244524efdf431edb28d08"
+  },
+  "nodeGroups": [],
+  "id": "ISP0UfGIEuvAvVRa",
+  "tags": []
+}
